@@ -1,0 +1,12 @@
+# dbt v2 ships the DuckDB adapter built in - no separate dbt-duckdb install.
+#
+# The profile only describes the compute: an in-memory DuckDB session.
+# Where the data is stored is configured separately in catalogs.yml.
+weather_lake:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ":memory:"
+      schema: main
+      threads: 1

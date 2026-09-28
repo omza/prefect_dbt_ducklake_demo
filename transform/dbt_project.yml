@@ -1,0 +1,27 @@
+name: weather_lake
+version: "1.0.0"
+profile: weather_lake
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+clean-targets: ["target", "dbt_packages"]
+
+# Write everything into the DuckLake catalog defined in catalogs.yml.
+seeds:
+  weather_lake:
+    +catalog_name: lake
+
+models:
+  weather_lake:
+    +catalog_name: lake
+    # staging = light cleanup of raw data, 1:1 with source tables
+    staging:
+      +schema: staging
+      +materialized: view
+    # marts = business-ready tables that people query
+    marts:
+      +schema: marts
+      +materialized: table

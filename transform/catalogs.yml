@@ -1,0 +1,18 @@
+# DuckLake catalog for dbt v2.
+#
+# dbt attaches this catalog to the DuckDB session under its name ("lake").
+# Models and seeds opt in with `+catalog_name: lake` in dbt_project.yml, so
+# everything dbt builds is stored as a DuckLake table:
+#   metadata_path -> the catalog (schemas, tables, snapshots) in a DuckDB file
+#   data_path     -> the table data as Parquet files
+#
+# DUCKLAKE_DATA_DIR is set by the Prefect flow (pipeline/transform.py) so it
+# matches the path the Python ingest uses (pipeline/config.py).
+catalogs:
+  - name: lake
+    type: ducklake
+    table_format: default
+    config:
+      duckdb:
+        metadata_path: "{{ env_var('DUCKLAKE_DATA_DIR', '../data') }}/catalog.ducklake"
+        data_path: "{{ env_var('DUCKLAKE_DATA_DIR', '../data') }}/lake/"

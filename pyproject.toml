@@ -1,0 +1,10 @@
+[project]
+name = "prefect-dbt-ducklake-demo"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "dbt>=2.0.6",
+    "duckdb>=1.5",
+    "httpx>=0.28.1",
+    "prefect>=3.8",
+]

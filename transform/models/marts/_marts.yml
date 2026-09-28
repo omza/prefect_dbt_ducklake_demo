@@ -1,0 +1,16 @@
+models:
+  - name: fct_weather_daily
+    description: Daily weather per city with a human-readable weather description.
+    columns:
+      - name: weather_day_id
+        data_tests:
+          - unique
+          - not_null
+      - name: weather_category
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: [clear, cloudy, fog, rain, snow, thunderstorm, unknown]
+
+  - name: agg_city_weather_monthly
+    description: One row per city and month.

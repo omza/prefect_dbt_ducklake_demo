@@ -1,0 +1,16 @@
+models:
+  - name: stg_weather_daily
+    description: Cleaned daily weather, one row per city and day.
+    columns:
+      - name: weather_day_id
+        data_tests:
+          - unique
+          - not_null
+      - name: city
+        data_tests:
+          - not_null
+      - name: weather_date
+        data_tests:
+          - not_null
+      - name: precipitation_mm
+        description: Daily precipitation; missing values are treated as 0.

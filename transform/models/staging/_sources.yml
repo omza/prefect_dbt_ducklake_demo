@@ -1,0 +1,12 @@
+sources:
+  - name: raw
+    description: Raw data loaded by the Prefect ingest flow.
+    database: lake  # the catalog name from catalogs.yml
+    schema: raw
+    tables:
+      - name: weather_daily
+        description: One row per city and day, as delivered by the Open-Meteo archive API.
+        config:
+          loaded_at_field: _loaded_at
+          freshness:
+            warn_after: {count: 7, period: day}

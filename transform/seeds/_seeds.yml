@@ -1,0 +1,10 @@
+seeds:
+  - name: weather_codes
+    description: WMO weather interpretation codes used by Open-Meteo.
+    config:
+      schema: reference
+    columns:
+      - name: weather_code
+        data_tests:
+          - unique
+          - not_null
