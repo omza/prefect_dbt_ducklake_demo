@@ -70,6 +70,18 @@ uv run python -m pipeline.flow --start 2026-01-01 --end 2026-09-20
 uv run python -m pipeline.explore
 ```
 
+### Query the lake in your browser
+
+```bash
+uv run python -m pipeline.ui        # DuckDB web UI at http://localhost:4213, Ctrl+C to stop
+```
+
+The lake is attached as the `lake` database. Try `from lake.marts.agg_city_weather_monthly;` or `from lake.snapshots();`.
+
+- **Stop the UI before running the flow.** It holds the DuckLake catalog, and only one process can write at a time.
+- **The UI extension comes from the nightly server.** DuckDB 1.5.6 has no stable build of it yet, so the script runs `INSTALL ui FROM core_nightly`.
+- **The page needs internet.** It is loaded from `ui.duckdb.org`, but your data stays local.
+
 ### See runs in the Prefect UI
 
 With no server configured, Prefect starts a temporary one for each run, so the run history disappears afterwards. To keep it:
@@ -103,6 +115,7 @@ pipeline/
   transform.py   Prefect task: run `dbt build`
   flow.py        the Prefect flow wiring it all together
   explore.py     query the lake, list snapshots, time travel
+  ui.py          open the lake in the DuckDB web UI
 transform/       dbt v2 project
   profiles.yml   compute: an in-memory DuckDB session
   catalogs.yml   storage: the DuckLake catalog "lake" (metadata + data path)
