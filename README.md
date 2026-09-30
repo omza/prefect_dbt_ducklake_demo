@@ -35,7 +35,27 @@ You need [uv](https://docs.astral.sh/uv/).
 ```bash
 uv sync                      # creates .venv with prefect, dbt v2, duckdb
 uv run dbt --version         # dbt 2.0.x. The DuckDB adapter is built in.
+cp .env.example .env         # local settings and secrets
 ```
+
+### Configuration & secrets
+
+All settings and secrets live in `.env`, which is gitignored. `.env.example` is the committed template, so add new variables there too.
+
+| Variable                 | Used by           | Purpose                                              |
+|--------------------------|-------------------|------------------------------------------------------|
+| `DUCKLAKE_DATA_DIR`      | ingest, dbt       | Folder for the DuckLake catalog + Parquet files      |
+| `OPEN_METEO_ARCHIVE_URL` | ingest            | Source API endpoint                                  |
+| `PREFECT_API_URL`        | Prefect           | Optional: send runs to a persistent Prefect server   |
+
+How it's wired:
+
+- `pipeline/__init__.py` loads `.env` with `python-dotenv` before anything else, including Prefect, is imported.
+- `pipeline/config.py` is the only module that reads the environment. Everything else imports from it.
+- The dbt subprocess inherits the environment, and `catalogs.yml` reads `DUCKLAKE_DATA_DIR` via `env_var()`.
+- Variables already set in your shell win over `.env`. For example, `DUCKLAKE_DATA_DIR=/tmp/lake uv run python -m pipeline.flow` writes to `/tmp/lake`.
+
+For deployed flows, the next step is [Prefect Secret blocks](https://docs.prefect.io/v3/develop/blocks) instead of a file on disk.
 
 ## Run the pipeline
 
@@ -55,27 +75,29 @@ uv run python -m pipeline.explore
 With no server configured, Prefect starts a temporary one for each run, so the run history disappears afterwards. To keep it:
 
 ```bash
-uv run prefect server start                                            # terminal 1, UI at http://127.0.0.1:4200
-uv run prefect config set PREFECT_API_URL=http://127.0.0.1:4200/api    # once
-uv run python -m pipeline.flow                                         # terminal 2
-uv run python -m pipeline.flow --serve                                 # or: run daily at 06:00
+uv run prefect server start                # terminal 1, UI at http://127.0.0.1:4200
+# uncomment PREFECT_API_URL in .env
+uv run python -m pipeline.flow             # terminal 2
+uv run python -m pipeline.flow --serve     # or: run daily at 06:00
 ```
 
 ### Work on the dbt project on its own
 
 ```bash
-cd transform
-export DUCKLAKE_DATA_DIR=../data
-uv run dbt build --profiles-dir .                           # seeds + models + tests
-uv run dbt show --profiles-dir . --select agg_city_weather_monthly
-uv run dbt source freshness --profiles-dir .
+# a thin wrapper around the dbt CLI that applies the settings from .env
+uv run python -m pipeline.transform build                  # seeds + models + tests
+uv run python -m pipeline.transform show --select agg_city_weather_monthly
+uv run python -m pipeline.transform source freshness
 ```
+
+dbt doesn't read `.env` itself. The wrapper also turns `DUCKLAKE_DATA_DIR` into an absolute path, because DuckLake saves the data path in its catalog and rejects a differently spelled one (such as `./data`) later on.
 
 ## Project layout
 
 ```
 pipeline/
-  config.py      paths + list of cities
+  __init__.py    loads .env (python-dotenv)
+  config.py      settings from the environment + list of cities
   lake.py        connect() → DuckDB session with DuckLake attached as "lake"
   ingest.py      Prefect tasks: extract from API, load into raw
   transform.py   Prefect task: run `dbt build`

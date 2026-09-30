@@ -10,10 +10,9 @@ import httpx
 from prefect import task
 from prefect.logging import get_run_logger
 
-from pipeline.config import RAW_SCHEMA, City
+from pipeline.config import OPEN_METEO_ARCHIVE_URL, RAW_SCHEMA, City
 from pipeline import lake
 
-ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 DAILY_VARIABLES = [
     "temperature_2m_max",
     "temperature_2m_min",
@@ -28,7 +27,7 @@ DAILY_VARIABLES = [
 def extract_city_weather(city: City, start_date: date, end_date: date) -> list[dict]:
     """Fetch one city's daily weather and return it as a list of rows."""
     response = httpx.get(
-        ARCHIVE_URL,
+        OPEN_METEO_ARCHIVE_URL,
         params={
             "latitude": city.latitude,
             "longitude": city.longitude,

@@ -1,7 +1,8 @@
 """Central settings for the demo pipeline.
 
-Every path can be overridden with an environment variable, so the same code
-works on your laptop, in CI, or inside a Prefect worker.
+Settings and secrets come from environment variables, which are loaded from
+the project's .env file (see pipeline/__init__.py and .env.example). This is
+the only module that reads them - everything else imports from here.
 """
 
 import os
@@ -10,14 +11,26 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+
+def _env(name: str, default: str) -> str:
+    return os.environ.get(name) or default
+
+
+def _env_path(name: str, default: str) -> Path:
+    """Read a path setting; relative paths are relative to the project root."""
+    return (PROJECT_ROOT / _env(name, default)).resolve()
+
+
 # Where the lakehouse lives on disk:
 #   data/catalog.ducklake  -> DuckLake metadata catalog (a DuckDB file)
 #   data/lake/             -> the actual table data, stored as Parquet files
-DATA_DIR = Path(os.environ.get("DUCKLAKE_DATA_DIR", PROJECT_ROOT / "data"))
+DATA_DIR = _env_path("DUCKLAKE_DATA_DIR", "./data")
 CATALOG_PATH = DATA_DIR / "catalog.ducklake"
 LAKE_DATA_PATH = DATA_DIR / "lake"
 
 DBT_PROJECT_DIR = PROJECT_ROOT / "transform"
+
+OPEN_METEO_ARCHIVE_URL = _env("OPEN_METEO_ARCHIVE_URL", "https://archive-api.open-meteo.com/v1/archive")
 
 LAKE_ALIAS = "lake"
 RAW_SCHEMA = "raw"
